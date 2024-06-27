@@ -33,21 +33,21 @@ func (l *Lexer) NextToken() token.Token {
 
 	// Double byte tokens
 	if l.ch == '=' {
-		if l.peekChar() == '=' {
+		if l.peekCharIs('=') {
 			l.advanceChar()
 			return newTokenStr(token.EQUALITY, "==")
 		}
 
 		l.advanceChar()
-		return newToken(token.ASSIGN, l.ch)
+		return newTokenStr(token.ASSIGN, "=")
 	} else if l.ch == '!' {
-		if l.peekChar() == '=' {
+		if l.peekCharIs('=') {
 			l.advanceChar()
 			return newTokenStr(token.NOTEQUAL, "!=")
 		}
 
 		l.advanceChar()
-		return newToken(token.BANG, l.ch)
+		return newTokenStr(token.BANG, "!")
 	}
 
 	// Single byte tokens (one char in length)
@@ -88,6 +88,7 @@ func (l *Lexer) NextToken() token.Token {
 func (l *Lexer) advanceChar() {
 	if l.nextPos >= len(l.input) {
 		l.ch = 0
+		l.currPos = l.nextPos
 		return
 	}
 
@@ -96,12 +97,19 @@ func (l *Lexer) advanceChar() {
 	l.nextPos++
 }
 
-func (l *Lexer) peekChar() byte {
+// Check if the next char is certain byte
+// Advance lexer character if true
+func (l *Lexer) peekCharIs(peek byte) bool {
 	if l.nextPos >= len(l.input) {
-		return 0
+		return false
 	}
 
-	return l.input[l.nextPos]
+	if peek != l.input[l.nextPos] {
+		return false
+	}
+
+	l.advanceChar()
+	return true
 }
 
 type PredicateFunc func(byte) bool
