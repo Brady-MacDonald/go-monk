@@ -7,41 +7,47 @@ type Token struct {
 	Literal string
 }
 
-// List of TokenTypes
 const (
-	EQUALITY  = "EQUALITY"    // ==
-	NOTEQUAL  = "NOTEQUAL"    // !=
-	LT        = "LESSTHAN"    // <
-	GT        = "GREATERTHAN" // >
-	ASSIGN    = "ASSIGN"      // =
-	BANG      = "BANG"        // !
-	PLUS      = "PLUS"        // +
-	MINUS     = "MINUS"       // -
-	SLASH     = "SLASH"       // /
-	ASTERISK  = "ASTERISK"    // *
-	LBRACE    = "LBRACE"      // (
-	RBRACE    = "RBRACE"      // )
-	LPAREN    = "LPAREN"      // {
-	RPAREN    = "RPAREN"      // }
-	LBRACKET  = "LBRACKET"    // [
-	RBRACKET  = "RBRACKET"    // ]
-	SEMICOLON = "SEMICOLON"   // ;
+	// Multi byte tokens
+	NUMBER     = "Number"
+	IDENTIFIER = "Identifier"
 
-	IF       = "IF"
-	ELSE     = "ELSE"
-	RETURN   = "RETURN"
-	LET      = "LET"
-	FUNCTION = "FUNCTION"
-	TRUE     = "TRUE"
-	FALSE    = "FALSE"
+	// Two byte tokens
+	EQUALITY = "Equality" // ==
+	NOTEQUAL = "NotEqual" // !=
 
-	NUMBER     = "NUMBER"
-	IDENTIFIER = "IDENTIFIER"
+	// Single byte tokens
+	LT        = "LessThan"      // <
+	GT        = "GreaterThan"   // >
+	ASSIGN    = "Assign"        // =
+	BANG      = "Bang"          // !
+	PLUS      = "Plus"          // +
+	MINUS     = "Minus"         // -
+	SLASH     = "Slash"         // /
+	ASTERISK  = "Asterisk"      // *
+	LBRACE    = "Left-Brace"    // {
+	RBRACE    = "Right-Brace"   // }
+	LPAREN    = "Left-Paren"    // (
+	RPAREN    = "Right-Paren"   // )
+	LBRACKET  = "Left-Bracket"  // [
+	RBRACKET  = "Right-Bracket" // ]
+	SEMICOLON = "Semicolon"     // ;
+	COMMA     = "Comma"         // ,
 
-	ILLEGAL = "ILLEGAL"
+	// Keywords
+	IF       = "If"
+	ELSE     = "Else"
+	RETURN   = "Return"
+	LET      = "Let"
+	FUNCTION = "Function"
+	TRUE     = "True"
+	FALSE    = "False"
+
+	ILLEGAL = "Illegal"
 	EOF     = "EOF"
 )
 
+// Map the language keywords in their literal form, to their corresponding TokenType
 var keywords = map[string]TokenType{
 	"if":     IF,
 	"let":    LET,
