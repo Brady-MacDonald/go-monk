@@ -157,11 +157,14 @@ func TestLexerSymbols(t *testing.T) {
 	}
 }
 
-func TestIndetifier(t *testing.T) {
+func TestMultiByteTokens(t *testing.T) {
 	input := `
         tester
+        123
         name
+        ==
         age
+        !=
     `
 
 	expected := []struct {
@@ -173,12 +176,24 @@ func TestIndetifier(t *testing.T) {
 			expLiteral: "tester",
 		},
 		{
+			expType:    token.NUMBER,
+			expLiteral: "123",
+		},
+		{
 			expType:    token.IDENTIFIER,
 			expLiteral: "name",
 		},
 		{
+			expType:    token.EQUALITY,
+			expLiteral: "==",
+		},
+		{
 			expType:    token.IDENTIFIER,
 			expLiteral: "age",
+		},
+		{
+			expType:    token.NOTEQUAL,
+			expLiteral: "!=",
 		},
 	}
 
