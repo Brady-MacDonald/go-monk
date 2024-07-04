@@ -3,6 +3,7 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"monkey/evaluator"
 	"monkey/lexer"
 	"monkey/parser"
 	"os"
@@ -17,7 +18,6 @@ func Start() {
 		fmt.Fprintf(os.Stdout, "%s", PROMPT)
 
 		if ok := scanner.Scan(); !ok {
-			fmt.Println("idk")
 			return
 		}
 
@@ -25,11 +25,18 @@ func Start() {
 
 		l := lexer.New(input)
 		p := parser.New(l)
+
 		program := p.ParseProgram()
 		p.CheckErrors()
 
 		for _, stmt := range program.Statements {
 			fmt.Println(stmt)
+		}
+
+		eval := evaluator.Eval(program)
+		if eval != nil {
+			fmt.Println(eval.Type())
+			fmt.Println(eval.Inspect())
 		}
 	}
 }
