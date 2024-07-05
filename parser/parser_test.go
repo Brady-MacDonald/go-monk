@@ -63,8 +63,8 @@ func TestIdentifier(t *testing.T) {
 		t.Fatalf("ExpressionStatement does not contain an Identifier. Got=%T", stmt)
 	}
 
-	if ident.Name != "foobar" {
-		t.Fatalf("Identifier.Name does not contain correct value. Got=%s, Expected=foobar", ident.Name)
+	if ident.Value != "foobar" {
+		t.Fatalf("Identifier.Name does not contain correct value. Got=%s, Expected=foobar", ident.Value)
 	}
 
 	if ident.TokenLiteral() != "foobar" {
@@ -216,7 +216,7 @@ func TestIfExpression(t *testing.T) {
 
 func assertAstLength(t *testing.T, program *ast.Program, length int) {
 	if len(program.Statements) != 1 {
-		t.Fatalf("Program does not have enough statements. Got=%d, Expected=1", len(program.Statements))
+		t.Fatalf("Program does not have enough statements. Got=%d, Expected=%d", len(program.Statements), length)
 	}
 }
 
@@ -272,8 +272,8 @@ func testIdentifier(t *testing.T, identExp ast.Expression, val string) bool {
 		return false
 	}
 
-	if ident.Name != val {
-		t.Errorf("Identifier.Name does not match, Got=%s expected=%s", ident.Name, val)
+	if ident.Value != val {
+		t.Errorf("Identifier.Name does not match, Got=%s expected=%s", ident.Value, val)
 		return false
 	}
 

@@ -71,7 +71,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 func (p *Parser) parseIndentifier() ast.Expression {
 	ident := &ast.Identifier{
 		Token: p.currToken,
-		Name:  p.currToken.Literal,
+		Value: p.currToken.Literal,
 	}
 
 	return ident

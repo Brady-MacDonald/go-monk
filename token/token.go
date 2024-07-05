@@ -9,14 +9,17 @@ type Token struct {
 
 const (
 	// Multi byte tokens
+
 	NUMBER     = "Number"
 	IDENTIFIER = "Identifier"
 
 	// Two byte tokens
+
 	EQUALITY = "Equality" // ==
 	NOTEQUAL = "NotEqual" // !=
 
 	// Single byte tokens
+
 	LT        = "LessThan"      // <
 	GT        = "GreaterThan"   // >
 	ASSIGN    = "Assign"        // =
@@ -35,6 +38,7 @@ const (
 	COMMA     = "Comma"         // ,
 
 	// Keywords
+
 	IF       = "If"
 	ELSE     = "Else"
 	RETURN   = "Return"

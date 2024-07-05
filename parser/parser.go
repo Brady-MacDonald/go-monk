@@ -8,7 +8,7 @@ import (
 
 // Hashmap to associate a TokenType with a given precedence
 var precedence = map[token.TokenType]int{
-	token.EQUALITY: EQUALS,
+	token.EQUALITY: EQUALS, // Lowest
 	token.NOTEQUAL: EQUALS,
 	token.LT:       LESSGREATER,
 	token.GT:       LESSGREATER,
@@ -16,7 +16,7 @@ var precedence = map[token.TokenType]int{
 	token.PLUS:     SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
-	token.LPAREN:   CALL,
+	token.LPAREN:   CALL, // Highest
 }
 
 // Order of precedence for expression evaluation
@@ -136,7 +136,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	ls.Name = &ast.Identifier{
 		Token: p.currToken,
-		Name:  p.currToken.Literal,
+		Value: p.currToken.Literal,
 	}
 
 	if !p.expectPeek(token.ASSIGN) {

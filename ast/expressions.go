@@ -10,12 +10,12 @@ import (
 
 type Identifier struct {
 	Token token.Token
-	Name  string
+	Value string
 }
 
 func (i *Identifier) expression()          {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string       { return i.Name }
+func (i *Identifier) String() string       { return i.Value }
 
 /*** Integer Literal ***/
 

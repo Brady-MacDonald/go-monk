@@ -47,8 +47,8 @@ func (ls *LetStatement) String() string {
 
 /*** Return Statement ***/
 type ReturnStatement struct {
-	Token     token.Token
-	ReturnExp Expression // Expression to be returned
+	Token token.Token
+	Value Expression // Expression to be returned
 }
 
 func (rs *ReturnStatement) statment() {}
@@ -57,7 +57,7 @@ func (rs *ReturnStatement) TokenLiteral() string {
 }
 
 func (rs *ReturnStatement) String() string {
-	returnStr := fmt.Sprintf("return %s", rs.ReturnExp.String())
+	returnStr := fmt.Sprintf("return %s", rs.Value.String())
 	return returnStr
 }
 
