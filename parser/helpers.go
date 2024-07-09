@@ -5,6 +5,9 @@ import (
 	"monkey/token"
 )
 
+func (p *Parser) currTokenIs(tokType token.TokenType) bool { return p.currToken.Type == tokType }
+func (p *Parser) peekTokenIs(tokType token.TokenType) bool { return p.nextToken.Type == tokType }
+
 func (p *Parser) CheckErrors() {
 	for _, err := range p.errors {
 		fmt.Println(err)
@@ -15,9 +18,6 @@ func (p *Parser) advanceTokens() {
 	p.currToken = p.nextToken
 	p.nextToken = p.lexer.NextToken()
 }
-
-func (p *Parser) currTokenIs(tokType token.TokenType) bool { return p.currToken.Type == tokType }
-func (p *Parser) peekTokenIs(tokType token.TokenType) bool { return p.nextToken.Type == tokType }
 
 // Determines if next token is of the expected type.
 // Advances token pointers if true, adds error otherwise
@@ -31,7 +31,7 @@ func (p *Parser) expectPeek(expToken token.TokenType) bool {
 	return true
 }
 
-// Get the precedence associated with the parsers currToken
+// Get the precedence associated with the currToken
 func (p *Parser) currPrecendence() int {
 	if prec, ok := precedence[p.currToken.Type]; ok {
 		return prec
@@ -40,7 +40,7 @@ func (p *Parser) currPrecendence() int {
 	return LOWEST
 }
 
-// Get the precedence associated with the parsers nextToken
+// Get the precedence associated with the nextToken
 func (p *Parser) peekPrecendence() int {
 	if prec, ok := precedence[p.nextToken.Type]; ok {
 		return prec
@@ -49,35 +49,32 @@ func (p *Parser) peekPrecendence() int {
 	return LOWEST
 }
 
-// Register the TokenType with its associated parsing function
-// Tokens which can exist at the beginning of an expression
-// prefixParsers advance the token so it sits on the last token associated with its Node
+// Register tokens which can exist at the beginning of an expression (prefix position) with its associated parsing function.
+// prefixParsers advance the currToken to sit on the last token associated with its Node
 func (p *Parser) registerPrefixParsers() {
 	p.prefixParsers[token.IDENTIFIER] = p.parseIndentifier
 	p.prefixParsers[token.NUMBER] = p.parseIntLiteral
 	p.prefixParsers[token.IF] = p.parseConditional
 
-	// Prefix operators: Creates a PrefixExpression
+	// Prefix operators: Creates a ast.PrefixExpression
 	p.prefixParsers[token.BANG] = p.parsePrefixExpression
 	p.prefixParsers[token.MINUS] = p.parsePrefixExpression
 
-	// Boolean expressions
+	// Boolean expressions: ast.BoolLiteral
 	p.prefixParsers[token.TRUE] = p.parseBoolLiteral
 	p.prefixParsers[token.FALSE] = p.parseBoolLiteral
 
-	// LPAREN if in prefix position indicates a grouped expression
-	//(<expression>)
+	// LPAREN prefix position indicates a grouped expression: (<expression>)
 	p.prefixParsers[token.LPAREN] = p.parseGroupedExpression
 
 	// Function Literal
 	p.prefixParsers[token.FUNCTION] = p.parseFnLiteral
 }
 
-// Register the Tokens which can be used as an infix operator
+// Register Tokens to be used as infix operators with their respective parsing function
 // <expression> <infix-token> <expression>
 func (p *Parser) registerInfixParsers() {
-	// LPAREN infix position indicates call expression
-	// <expression>(<expression args>)
+	// LPAREN infix position indicates call expression: <expression>(<expression args>)
 	p.infixParsers[token.LPAREN] = p.parseCallExpression
 
 	p.infixParsers[token.LT] = p.parseInfixExpression

@@ -86,7 +86,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
-// Determine how to parse the current token into an ast.Statement based on the TokenType
+// Determine how to parse the currToken into an ast.Statement based on the TokenType
 func (p *Parser) parseStatement() ast.Statement {
 	var stmt ast.Statement
 
@@ -102,11 +102,11 @@ func (p *Parser) parseStatement() ast.Statement {
 	return stmt
 }
 
-// Parse the following sete of Statements into an ast.BlockStatement
-// Should be called with the curreToken on a LBRACE, and finish with it on the closing RBRACE
+// Parse the following Statements into an *ast.BlockStatement.
+// Should be called with the currToken on a LBRACE, and finish with it on the closing RBRACE
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	blkStmt := &ast.BlockStatement{
-		Token:      p.currToken,
+		Token:      p.currToken, // {
 		Statements: []ast.Statement{},
 	}
 
@@ -124,10 +124,11 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	return blkStmt
 }
 
-// Construct the ast.Node to represent a valid LetStatement
+// Construct the ast.Node to represent a valid LetStatement.
+// let <identifier> = <expression>
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	ls := &ast.LetStatement{
-		Token: p.currToken, // Let token
+		Token: p.currToken,
 	}
 
 	if !p.expectPeek(token.IDENTIFIER) {
@@ -143,10 +144,10 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	p.advanceTokens() // Skip over ASSIGN token
+	p.advanceTokens()
 	ls.Value = p.parseExpression(LOWEST)
 
-	// Optional semicolon to end statement
+	// Optional semicolon
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.advanceTokens()
 	}
@@ -154,7 +155,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	return ls
 }
 
-// Parse the current token as  ReturnStatement
+// Parse the current token as ReturnStatement
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	rs := &ast.ReturnStatement{
 		Token: p.currToken,
@@ -171,14 +172,14 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 }
 
 // Parse the current token as the start of an ExpressionStatement
-// The Expression could be of any ast.Expression type
+// The Expression could be of any Expression type
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	es := &ast.ExpressionStatement{
 		Token: p.currToken,
 	}
 
-	// LOWEST precedence used since there is nothing to compare yet
-	// As expression has not yet begun to be parsed, use the LOWEST precedence to initialize parsing of expression
+	// LOWEST precedence used since there is nothing to compare yet.
+	// Use the LOWEST precedence to initialize parsing of expression
 	es.Expr = p.parseExpression(LOWEST)
 
 	if p.peekTokenIs(token.SEMICOLON) {

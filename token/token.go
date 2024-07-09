@@ -11,6 +11,7 @@ const (
 	// Multi byte tokens
 
 	NUMBER     = "Number"
+	STRING     = "String"
 	IDENTIFIER = "Identifier"
 
 	// Two byte tokens
@@ -35,6 +36,7 @@ const (
 	LBRACKET  = "Left-Bracket"  // [
 	RBRACKET  = "Right-Bracket" // ]
 	SEMICOLON = "Semicolon"     // ;
+	COLON     = "Colon"         // :
 	COMMA     = "Comma"         // ,
 
 	// Keywords
@@ -51,7 +53,7 @@ const (
 	EOF     = "EOF"
 )
 
-// Map the language keywords in their literal form, to their corresponding TokenType
+// Map the language keywords, to their corresponding TokenType
 var keywords = map[string]TokenType{
 	"if":     IF,
 	"let":    LET,
@@ -62,7 +64,7 @@ var keywords = map[string]TokenType{
 	"fn":     FUNCTION,
 }
 
-// Determine if the given identifier is a language defined keyword
+// Determine if the given identifier is a language keyword
 func GetTokenType(ident string) TokenType {
 	if tok, ok := keywords[ident]; ok {
 		return tok

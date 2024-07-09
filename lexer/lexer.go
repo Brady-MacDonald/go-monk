@@ -18,10 +18,11 @@ func New(input string) *Lexer {
 	return l
 }
 
+// Get the next token from the source code
 func (l *Lexer) NextToken() token.Token {
 	l.eatWhitespace()
 
-	// Multi byte tokens
+	// Multi byte token if first character is a number or char
 	if isNumber(l.ch) {
 		num := l.readWord(isNumber)
 		return newTokenStr(token.NUMBER, num)
@@ -120,6 +121,7 @@ func (l *Lexer) peekCharIs(peek byte) bool {
 
 type PredicateFunc func(byte) bool
 
+// Use the given predicate to read up until the end of the number/identifier
 func (l *Lexer) readWord(pred PredicateFunc) string {
 	start := l.currPos
 	for pred(l.ch) {
