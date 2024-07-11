@@ -69,7 +69,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	return infix
 }
 
-// Parse the current token as an Indentifier
+// Parse the currToken as an Indentifier
 func (p *Parser) parseIndentifier() ast.Expression {
 	ident := &ast.Identifier{
 		Token: p.currToken,
@@ -79,7 +79,7 @@ func (p *Parser) parseIndentifier() ast.Expression {
 	return ident
 }
 
-// Parse the current token as an IntLiteral
+// Parse the currToken as IntLiteral
 func (p *Parser) parseIntLiteral() ast.Expression {
 	intLiteral := &ast.IntLiteral{
 		Token: p.currToken,
@@ -95,7 +95,17 @@ func (p *Parser) parseIntLiteral() ast.Expression {
 	return intLiteral
 }
 
-// Parse the current token as an BoolLiteral
+// Parse the currToken as StringLiteral
+func (p *Parser) parseStringLiteral() ast.Expression {
+	strLit := &ast.StringLiteral{
+		Token: p.currToken,
+		Value: p.currToken.Literal,
+	}
+
+	return strLit
+}
+
+// Parse the currToken as BoolLiteral
 func (p *Parser) parseBoolLiteral() ast.Expression {
 	boolExp := &ast.BoolLiteral{
 		Token: p.currToken,
@@ -109,6 +119,46 @@ func (p *Parser) parseBoolLiteral() ast.Expression {
 
 	boolExp.Value = val
 	return boolExp
+}
+
+func (p *Parser) parseHashLiteral() ast.Expression {
+	hash := &ast.HashLiteral{
+		Token: p.currToken,
+		Pairs: map[ast.Expression]ast.Expression{},
+	}
+
+	for !p.peekTokenIs(token.RBRACE) {
+		p.advanceTokens()
+		key := p.parseExpression(LOWEST)
+
+		if !p.expectPeek(token.COLON) {
+			return nil
+		}
+
+		p.advanceTokens()
+		val := p.parseExpression(LOWEST)
+
+		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) {
+			return nil
+		}
+
+		hash.Pairs[key] = val
+	}
+
+	if !p.expectPeek(token.RBRACE) {
+		return nil
+	}
+
+	return hash
+}
+
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	arr := &ast.ArrayLiteral{
+		Token: p.currToken,
+	}
+
+	arr.Elements = p.parseExpressionList(token.RBRACKET)
+	return arr
 }
 
 // Current token is a LPAREN in the prefix position
@@ -216,6 +266,24 @@ func (p *Parser) parseFnParams() []*ast.Identifier {
 	return params
 }
 
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	idx := &ast.IndexExpression{
+		Token: p.currToken,
+		Left:  left,
+	}
+
+	p.advanceTokens()
+
+	//Index should be an Expression which produces an int value
+	idx.Index = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return idx
+}
+
 // Current token is LPAREN in an infix position
 // Previous should be an Identifier/FnLiteral
 func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
@@ -224,34 +292,34 @@ func (p *Parser) parseCallExpression(fn ast.Expression) ast.Expression {
 		Fn:    fn,
 	}
 
-	callExpr.Args = p.parseCallArgs()
+	callExpr.Args = p.parseExpressionList(token.RPAREN)
 	return callExpr
 }
 
-// Helper to parse the expressions passed as args to fn invocation
-func (p *Parser) parseCallArgs() []ast.Expression {
-	args := []ast.Expression{}
+// Parse comma separated list of expressions
+func (p *Parser) parseExpressionList(endToken token.TokenType) []ast.Expression {
+	expressions := []ast.Expression{}
 
-	// Empty args
-	if p.peekTokenIs(token.RPAREN) {
+	// Empty list
+	if p.peekTokenIs(endToken) {
 		p.advanceTokens()
-		return args
+		return expressions
 	}
 
 	p.advanceTokens()
-	firstArg := p.parseExpression(LOWEST)
-	args = append(args, firstArg)
+	firstExp := p.parseExpression(LOWEST)
+	expressions = append(expressions, firstExp)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.advanceTokens()
 		p.advanceTokens()
-		argExpr := p.parseExpression(LOWEST)
-		args = append(args, argExpr)
+		expr := p.parseExpression(LOWEST)
+		expressions = append(expressions, expr)
 	}
 
-	if !p.expectPeek(token.RPAREN) {
+	if !p.expectPeek(endToken) {
 		return nil
 	}
 
-	return args
+	return expressions
 }

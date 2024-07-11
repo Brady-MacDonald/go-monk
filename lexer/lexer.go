@@ -22,14 +22,21 @@ func New(input string) *Lexer {
 func (l *Lexer) NextToken() token.Token {
 	l.eatWhitespace()
 
-	// Multi byte token if first character is a number or char
+	// Multi byte token if first character is a number/letter/quote
 	if isNumber(l.ch) {
 		num := l.readWord(isNumber)
 		return newTokenStr(token.NUMBER, num)
-	} else if isValidChar(l.ch) {
-		str := l.readWord(isValidChar)
+
+	} else if isIdentifier(l.ch) {
+		str := l.readWord(isIdentifier)
 		tokType := token.GetTokenType(str)
 		return newTokenStr(tokType, str)
+
+	} else if !notQuote(l.ch) { //not(notQuote) == isQuote :/
+		l.advanceChar()
+		str := l.readWord(notQuote)
+		l.advanceChar()
+		return newTokenStr(token.STRING, str)
 	}
 
 	// Double byte tokens
@@ -80,6 +87,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.RBRACKET, l.ch)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
+	case ':':
+		tok = newToken(token.COLON, l.ch)
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
 	case 0:

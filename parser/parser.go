@@ -16,7 +16,8 @@ var precedence = map[token.TokenType]int{
 	token.PLUS:     SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
-	token.LPAREN:   CALL, // Highest
+	token.LPAREN:   CALL,
+	token.LBRACKET: INDEX, // Highest
 }
 
 // Order of precedence for expression evaluation
@@ -28,7 +29,8 @@ const (
 	SUM
 	PRODUCT
 	PREFIX
-	CALL // highest precedence
+	CALL
+	INDEX // Highest index
 )
 
 // Pratt Parser

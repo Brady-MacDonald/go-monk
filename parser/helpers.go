@@ -10,7 +10,7 @@ func (p *Parser) peekTokenIs(tokType token.TokenType) bool { return p.nextToken.
 
 func (p *Parser) CheckErrors() {
 	for _, err := range p.errors {
-		fmt.Println(err)
+		fmt.Printf("Parser Error: %s\n", err)
 	}
 }
 
@@ -54,7 +54,11 @@ func (p *Parser) peekPrecendence() int {
 func (p *Parser) registerPrefixParsers() {
 	p.prefixParsers[token.IDENTIFIER] = p.parseIndentifier
 	p.prefixParsers[token.NUMBER] = p.parseIntLiteral
+	p.prefixParsers[token.STRING] = p.parseStringLiteral
 	p.prefixParsers[token.IF] = p.parseConditional
+
+	p.prefixParsers[token.LBRACKET] = p.parseArrayLiteral
+	p.prefixParsers[token.LBRACE] = p.parseHashLiteral
 
 	// Prefix operators: Creates a ast.PrefixExpression
 	p.prefixParsers[token.BANG] = p.parsePrefixExpression
@@ -76,6 +80,8 @@ func (p *Parser) registerPrefixParsers() {
 func (p *Parser) registerInfixParsers() {
 	// LPAREN infix position indicates call expression: <expression>(<expression args>)
 	p.infixParsers[token.LPAREN] = p.parseCallExpression
+
+	p.infixParsers[token.LBRACKET] = p.parseIndexExpression
 
 	p.infixParsers[token.LT] = p.parseInfixExpression
 	p.infixParsers[token.GT] = p.parseInfixExpression

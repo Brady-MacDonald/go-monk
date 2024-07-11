@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"monkey/ast"
 )
 
@@ -10,6 +11,10 @@ type (
 	BuiltinFn  func(args ...Object) Object
 	ObjectType string
 )
+
+type Hashable interface {
+	HashKey() HashKey
+}
 
 type Object interface {
 	Inspect() string
@@ -26,6 +31,7 @@ const (
 	FUNCTION_OBJ = "FUNCTION"
 	BUILTIN_OBJ  = "BUILTIN"
 	ARRAY_OBJ    = "ARRAY"
+	HASH_OBJ     = "HASH"
 )
 
 /*** BuiltIn Object ***/
@@ -50,8 +56,16 @@ type Integer struct {
 	Value int64
 }
 
-func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
 func (i *Integer) Type() ObjectType { return INTEGER_OBJ }
+func (i *Integer) Inspect() string  { return fmt.Sprintf("%d", i.Value) }
+func (i *Integer) HashKey() HashKey {
+	hashKey := HashKey{
+		Type: INTEGER_OBJ,
+		Key:  uint64(i.Value),
+	}
+
+	return hashKey
+}
 
 /*** Boolean Object ***/
 
@@ -59,8 +73,21 @@ type Boolean struct {
 	Value bool
 }
 
-func (b *Boolean) Inspect() string  { return fmt.Sprintf("%v", b.Value) }
 func (b *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
+func (b *Boolean) Inspect() string  { return fmt.Sprintf("%v", b.Value) }
+func (b *Boolean) HashKey() HashKey {
+	hashKey := HashKey{
+		Type: BOOLEAN_OBJ,
+	}
+
+	if b.Value {
+		hashKey.Key = 1
+	} else {
+		hashKey.Key = 0
+	}
+
+	return hashKey
+}
 
 /*** String Object ***/
 
@@ -68,8 +95,18 @@ type String struct {
 	Value string
 }
 
-func (s *String) Inspect() string  { return fmt.Sprintf("%v", s.Value) }
 func (s *String) Type() ObjectType { return STRING_OBJ }
+func (s *String) Inspect() string  { return fmt.Sprintf("\"%v\"", s.Value) }
+func (s *String) HashKey() HashKey {
+	hashKey := HashKey{
+		Type: STRING_OBJ,
+	}
+	h := fnv.New64a()
+	h.Write([]byte(s.Value))
+	hashKey.Key = h.Sum64()
+
+	return hashKey
+}
 
 /*** Return Object ***/
 
@@ -123,9 +160,43 @@ func (a *Array) Type() ObjectType { return ARRAY_OBJ }
 func (a *Array) Inspect() string {
 	var out bytes.Buffer
 
+	out.WriteString("[")
 	for _, val := range a.Value {
 		out.WriteString(val.Inspect())
+		out.WriteString(",")
 	}
+	out.WriteString("]")
+
+	return out.String()
+}
+
+/*** Hash ***/
+
+type HashKey struct {
+	Type string
+	Key  uint64
+}
+
+// Used to track the original key, not the hashed key
+// Useful for printing the Hashtable
+type HashPair struct {
+	Key Object
+	Val Object
+}
+
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (h *Hash) Type() ObjectType { return HASH_OBJ }
+func (h *Hash) Inspect() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+	for _, pair := range h.Pairs {
+		out.WriteString(fmt.Sprintf("%s: %s,", pair.Key.Inspect(), pair.Val.Inspect()))
+	}
+	out.WriteString("}")
 
 	return out.String()
 }

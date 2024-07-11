@@ -39,6 +39,15 @@ func Eval(astNode ast.Node, env *object.Environment) object.Object {
 	case *ast.BoolLiteral:
 		return getBoolObj(node.Value)
 
+	case *ast.ArrayLiteral:
+		return evalArrayLiteral(node, env)
+
+	case *ast.HashLiteral:
+		return evalHashLiteral(node, env)
+
+	case *ast.IndexExpression:
+		return evalIndexExpression(node, env)
+
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
 
@@ -100,7 +109,7 @@ func evalBlockStatment(statements []ast.Statement, env *object.Environment) obje
 	return obj
 }
 
-// Eval each expression provided as args in function call
+// Eval each expression provided in slice of ast.Expression
 func evalExpressions(expressions []ast.Expression, env *object.Environment) []object.Object {
 	var results []object.Object
 
@@ -136,6 +145,101 @@ func evalLetStatement(stmt *ast.LetStatement, env *object.Environment) object.Ob
 	return nil
 }
 
+func evalArrayLiteral(arrAst *ast.ArrayLiteral, env *object.Environment) object.Object {
+	arrObj := &object.Array{}
+
+	evaledExpr := evalExpressions(arrAst.Elements, env)
+	if len(evaledExpr) == 1 && isError(evaledExpr[0]) {
+		return evaledExpr[0]
+	}
+
+	arrObj.Value = evaledExpr
+	return arrObj
+}
+
+func evalHashLiteral(hashAst *ast.HashLiteral, env *object.Environment) object.Object {
+	hash := &object.Hash{
+		Pairs: map[object.HashKey]object.HashPair{},
+	}
+
+	for key, val := range hashAst.Pairs {
+		evalKey := Eval(key, env)
+		if isError(evalKey) {
+			return evalKey
+		}
+
+		hashableKey, ok := evalKey.(object.Hashable)
+		if !ok {
+			return newError("Key is not HashAble. Got=%s", evalKey.Type())
+		}
+
+		evalVal := Eval(val, env)
+		if isError(evalVal) {
+			return evalVal
+		}
+
+		hashKey := hashableKey.HashKey()
+		hash.Pairs[hashKey] = object.HashPair{
+			Key: evalKey,
+			Val: evalVal,
+		}
+	}
+
+	return hash
+}
+
+// Get the element specified by the index into array/hash
+func evalIndexExpression(idxExp *ast.IndexExpression, env *object.Environment) object.Object {
+	arrObj := Eval(idxExp.Left, env)
+	if isError(arrObj) {
+		return arrObj
+	}
+
+	idxObj := Eval(idxExp.Index, env)
+	if isError(idxObj) {
+		return idxObj
+	}
+
+	switch obj := arrObj.(type) {
+	case *object.Array:
+		return evalArrayIndex(obj, idxObj, env)
+
+	case *object.Hash:
+		return evalHashIndex(obj, idxObj, env)
+
+	default:
+		return newError("Only Array/Hash is index-able, Got=%s", arrObj.Type())
+	}
+}
+
+func evalHashIndex(hash *object.Hash, idxObj object.Object, env *object.Environment) object.Object {
+	idx, ok := idxObj.(object.Hashable)
+	if !ok {
+		return newError("Key is not HashAble, Got=%s", idxObj.Type())
+	}
+
+	key := idx.HashKey()
+	if pair, ok := hash.Pairs[key]; ok {
+		return pair.Val
+	}
+
+	return NULL
+
+}
+
+func evalArrayIndex(arr *object.Array, idxObj object.Object, env *object.Environment) object.Object {
+	idx, ok := idxObj.(*object.Integer)
+	if !ok {
+		return newError("Index is not an Integer, Got=%s", idxObj.Type())
+	}
+
+	if idx.Value < 0 || int(idx.Value) >= len(arr.Value) {
+		return NULL
+	}
+
+	return arr.Value[idx.Value]
+}
+
 // Get the Object bound to the given Identifier
 func evalIdentifier(ident *ast.Identifier, env *object.Environment) object.Object {
 	val := env.Get(ident.Value)
@@ -144,7 +248,7 @@ func evalIdentifier(ident *ast.Identifier, env *object.Environment) object.Objec
 	}
 
 	//Check for identifier as a builtin function
-	if builtin, ok := BuiltIns[ident.Value]; ok {
+	if builtin, ok := builtins[ident.Value]; ok {
 		return builtin
 	}
 

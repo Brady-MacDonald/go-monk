@@ -26,7 +26,11 @@ func isNumber(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-func isValidChar(ch byte) bool {
+func notQuote(ch byte) bool {
+	return ch != '"'
+}
+
+func isIdentifier(ch byte) bool {
 	lower := 'a' <= ch && ch <= 'z'
 	upper := 'A' <= ch && ch <= 'Z'
 	special := ch == '_'

@@ -16,7 +16,7 @@ func (bs *BlockStatement) statment()            {}
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
-	out.WriteString("{")
+	// out.WriteString("{")
 
 	if len(bs.Statements) > 0 {
 		for _, stmt := range bs.Statements {
@@ -24,7 +24,7 @@ func (bs *BlockStatement) String() string {
 		}
 	}
 
-	out.WriteString("}")
+	// out.WriteString("}")
 	return out.String()
 }
 

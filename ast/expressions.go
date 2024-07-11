@@ -6,17 +6,6 @@ import (
 	"monkey/token"
 )
 
-/*** Identifier ***/
-
-type Identifier struct {
-	Token token.Token
-	Value string
-}
-
-func (i *Identifier) expression()          {}
-func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string       { return i.Value }
-
 /*** Integer Literal ***/
 
 type IntLiteral struct {
@@ -28,7 +17,7 @@ func (i *IntLiteral) expression()          {}
 func (i *IntLiteral) String() string       { return fmt.Sprintf("%d", i.Value) }
 func (i *IntLiteral) TokenLiteral() string { return i.Token.Literal }
 
-/*** Boolean ***/
+/*** Boolean Literal ***/
 
 type BoolLiteral struct {
 	Token token.Token
@@ -39,12 +28,99 @@ func (b *BoolLiteral) expression()          {}
 func (b *BoolLiteral) String() string       { return fmt.Sprintf("%v", b.Value) }
 func (b *BoolLiteral) TokenLiteral() string { return b.Token.Literal }
 
+/*** String Literal ***/
+
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (s *StringLiteral) expression()          {}
+func (s *StringLiteral) String() string       { return s.Value }
+func (s *StringLiteral) TokenLiteral() string { return s.Token.Literal }
+
+/*** Array Literal ***/
+
+type ArrayLiteral struct {
+	Token    token.Token // [
+	Elements []Expression
+}
+
+func (a *ArrayLiteral) expression()          {}
+func (a *ArrayLiteral) TokenLiteral() string { return a.Token.Literal }
+func (a *ArrayLiteral) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[")
+	for _, elem := range a.Elements {
+		out.WriteString(elem.String())
+		out.WriteString(",")
+	}
+	out.WriteString("]")
+
+	return out.String()
+}
+
+/*** Hash Literal ***/
+
+type HashLiteral struct {
+	Token token.Token // {
+	Pairs map[Expression]Expression
+}
+
+func (h *HashLiteral) expression()          {}
+func (h *HashLiteral) TokenLiteral() string { return h.Token.Literal }
+func (h *HashLiteral) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{")
+	for key, val := range h.Pairs {
+		out.WriteString(fmt.Sprintf("   %s: %s,\n", key.String(), val.String()))
+	}
+	out.WriteString("}")
+
+	return out.String()
+}
+
+/*** Identifier ***/
+
+type Identifier struct {
+	Token token.Token
+	Value string
+}
+
+func (i *Identifier) expression()          {}
+func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
+
+/*** Index Expression ***/
+
+type IndexExpression struct {
+	Token token.Token //[
+	Left  Expression
+	Index Expression
+}
+
+func (i *IndexExpression) expression()          {}
+func (i *IndexExpression) TokenLiteral() string { return i.Token.Literal }
+func (i *IndexExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(i.Left.String())
+	out.WriteString("[")
+	out.WriteString(i.Index.String())
+	out.WriteString("])")
+
+	return out.String()
+}
+
 /*** Prefix Expression ***/
 
 type PrefixExpression struct {
 	Token    token.Token
 	Operator string // ! or -
-	Right    Expression
+	Operand  Expression
 }
 
 func (pe *PrefixExpression) expression() {}
@@ -58,7 +134,7 @@ func (pe *PrefixExpression) String() string {
 	// Brackets around Operator/Right to indicate the grouping of operator/operand
 	out.WriteString("(")
 	out.WriteString(pe.Operator)
-	out.WriteString(pe.Right.String())
+	out.WriteString(pe.Operand.String())
 	out.WriteString(")")
 
 	return out.String()
@@ -95,7 +171,7 @@ type IfExpression struct {
 	Token       token.Token
 	Condition   Expression
 	Consequence *BlockStatement // Executed for 'if' block
-	Alternitive *BlockStatement // Executed as 'else' block
+	Alternative *BlockStatement // Executed as 'else' block
 }
 
 func (i *IfExpression) expression()          {}
@@ -109,9 +185,9 @@ func (i *IfExpression) String() string {
 	out.WriteString(i.Consequence.String())
 
 	// else block is optional
-	if i.Alternitive != nil {
+	if i.Alternative != nil {
 		out.WriteString("else")
-		out.WriteString(i.Alternitive.String())
+		out.WriteString(i.Alternative.String())
 	}
 
 	return out.String()
@@ -148,7 +224,7 @@ func (fl *FnLiteral) String() string {
 
 type CallExpression struct {
 	Token token.Token // ( token
-	Fn    Expression  // Identifier or FunctionLiteral
+	Fn    Expression  // Identifier or FnLiteral
 	Args  []Expression
 }
 
