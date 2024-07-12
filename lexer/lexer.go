@@ -4,14 +4,17 @@ import "monkey/token"
 
 type Lexer struct {
 	input   string
-	currPos int
-	nextPos int
+	line    int
+	column  int
+	currPos int // Index of current char in input string
+	nextPos int // Index of next char to examine
 	ch      byte
 }
 
 func New(input string) *Lexer {
 	l := &Lexer{
 		input: input,
+		line:  1,
 	}
 
 	l.advanceChar()
@@ -22,79 +25,85 @@ func New(input string) *Lexer {
 func (l *Lexer) NextToken() token.Token {
 	l.eatWhitespace()
 
+	pos := token.Position{
+		Filename: "test.monk",
+		Line:     l.line,
+		Column:   l.column,
+	}
+
 	// Multi byte token if first character is a number/letter/quote
 	if isNumber(l.ch) {
 		num := l.readWord(isNumber)
-		return newTokenStr(token.NUMBER, num)
+		return newTokenStr(token.NUMBER, num, pos)
 
 	} else if isIdentifier(l.ch) {
 		str := l.readWord(isIdentifier)
 		tokType := token.GetTokenType(str)
-		return newTokenStr(tokType, str)
+		return newTokenStr(tokType, str, pos)
 
 	} else if !notQuote(l.ch) { //not(notQuote) == isQuote :/
 		l.advanceChar()
 		str := l.readWord(notQuote)
 		l.advanceChar()
-		return newTokenStr(token.STRING, str)
+		return newTokenStr(token.STRING, str, pos)
 	}
 
 	// Double byte tokens
 	if l.ch == '=' {
 		if l.peekCharIs('=') {
 			l.advanceChar()
-			return newTokenStr(token.EQUALITY, "==")
+			return newTokenStr(token.EQUALITY, "==", pos)
 		}
 
 		l.advanceChar()
-		return newTokenStr(token.ASSIGN, "=")
+		return newToken(token.ASSIGN, '=', pos)
 	} else if l.ch == '!' {
 		if l.peekCharIs('=') {
 			l.advanceChar()
-			return newTokenStr(token.NOTEQUAL, "!=")
+			return newTokenStr(token.NOTEQUAL, "!=", pos)
 		}
 
 		l.advanceChar()
-		return newTokenStr(token.BANG, "!")
+		return newToken(token.BANG, '!', pos)
 	}
 
 	// Single byte tokens (one char in length)
 	var tok token.Token
 	switch l.ch {
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = newToken(token.PLUS, l.ch, pos)
 	case '-':
-		tok = newToken(token.MINUS, l.ch)
+		tok = newToken(token.MINUS, l.ch, pos)
 	case '*':
-		tok = newToken(token.ASTERISK, l.ch)
+		tok = newToken(token.ASTERISK, l.ch, pos)
 	case '/':
-		tok = newToken(token.SLASH, l.ch)
+		tok = newToken(token.SLASH, l.ch, pos)
 	case '<':
-		tok = newToken(token.LT, l.ch)
+		tok = newToken(token.LT, l.ch, pos)
 	case '>':
-		tok = newToken(token.GT, l.ch)
+		tok = newToken(token.GT, l.ch, pos)
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = newToken(token.LPAREN, l.ch, pos)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = newToken(token.RPAREN, l.ch, pos)
 	case '{':
-		tok = newToken(token.LBRACE, l.ch)
+		tok = newToken(token.LBRACE, l.ch, pos)
 	case '}':
-		tok = newToken(token.RBRACE, l.ch)
+		tok = newToken(token.RBRACE, l.ch, pos)
 	case '[':
-		tok = newToken(token.LBRACKET, l.ch)
+		tok = newToken(token.LBRACKET, l.ch, pos)
 	case ']':
-		tok = newToken(token.RBRACKET, l.ch)
+		tok = newToken(token.RBRACKET, l.ch, pos)
 	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
+		tok = newToken(token.SEMICOLON, l.ch, pos)
 	case ':':
-		tok = newToken(token.COLON, l.ch)
+		tok = newToken(token.COLON, l.ch, pos)
 	case ',':
-		tok = newToken(token.COMMA, l.ch)
+		tok = newToken(token.COMMA, l.ch, pos)
 	case 0:
-		tok = newToken(token.EOF, l.ch)
+		tok = newToken(token.EOF, l.ch, pos)
 	default:
-		tok = newToken(token.ILLEGAL, l.ch)
+		tok = newToken(token.ILLEGAL, l.ch, pos)
 	}
 
 	l.advanceChar()
@@ -109,8 +118,14 @@ func (l *Lexer) advanceChar() {
 	}
 
 	l.ch = l.input[l.nextPos]
+	if l.ch == '\n' {
+		l.line++
+		l.column = -1
+	}
+
 	l.currPos = l.nextPos
 	l.nextPos++
+	l.column++
 }
 
 // Check if the next char is certain byte

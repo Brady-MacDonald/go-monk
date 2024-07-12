@@ -19,8 +19,8 @@ type Expression interface {
 	expression()
 }
 
-// List of Statements which represents the source codes structure
-// Each statement must properly nest any Expressions for capture the semantics of the source code
+// List of Statements which represents the source codes structure.
+// Each statement must properly nest any Expressions to capture the semantics of the source code
 type Program struct {
 	Statements []Statement
 }

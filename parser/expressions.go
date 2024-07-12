@@ -9,20 +9,19 @@ import (
 
 // Begin the parsing of an Expression, initiated using the LOWEST precedence
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	// Get the parser function associated to the current token
+	// Get the prefix parser function associated to the current token
 	prefixFn := p.prefixParsers[p.currToken.Type]
 	if prefixFn == nil {
 		// Do not know how to begin parsing an expression with this TokenType
-		p.errors = append(p.errors, fmt.Sprintf("No prefix parser function found for token %s", p.currToken.Type))
+		p.errors = append(p.errors, fmt.Sprintf("No prefix parser function found for token %s. Line %d Column %d", p.currToken.Type, p.currToken.Position.Line, p.currToken.Position.Column))
 		return nil
 	}
 
 	expr := prefixFn()
 
 	// Iterate while the next token is not a SEMICOLON
-	// And the nextToken has a higher precedence than the current one
+	// And the nextToken has a higher precedence than currToken
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecendence() {
-		// Locate infix parsing func for next token
 		infixFn := p.infixParsers[p.nextToken.Type]
 		if infixFn == nil {
 			// If there's no infix parseFn then we are done parsing expression
@@ -31,7 +30,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			return expr
 		}
 
-		p.advanceTokens() //advance tokens to currToken sits on the infix operator
+		p.advanceTokens() //advance tokens so currToken sits on the infix operator
 		expr = infixFn(expr)
 	}
 

@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting REPL...")
-	repl.Start()
+	fmt.Printf("Starting REPL...\n----------------\n\n")
+	// repl.Start()
+	repl.File("test.monk")
 }

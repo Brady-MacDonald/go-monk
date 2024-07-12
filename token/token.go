@@ -2,9 +2,17 @@ package token
 
 type TokenType string
 
+type Position struct {
+	Filename string
+	Line     int
+	Column   int
+	Offset   int
+}
+
 type Token struct {
-	Type    TokenType
-	Literal string
+	Type     TokenType
+	Literal  string
+	Position Position
 }
 
 const (

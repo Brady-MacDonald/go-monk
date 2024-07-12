@@ -8,10 +8,16 @@ import (
 func (p *Parser) currTokenIs(tokType token.TokenType) bool { return p.currToken.Type == tokType }
 func (p *Parser) peekTokenIs(tokType token.TokenType) bool { return p.nextToken.Type == tokType }
 
-func (p *Parser) CheckErrors() {
-	for _, err := range p.errors {
-		fmt.Printf("Parser Error: %s\n", err)
+func (p *Parser) ParserErrors() bool {
+	if len(p.errors) > 0 {
+		for _, err := range p.errors {
+			fmt.Printf("Parser Error: %s\n", err)
+		}
+
+		return true
 	}
+
+	return false
 }
 
 func (p *Parser) advanceTokens() {
@@ -20,10 +26,10 @@ func (p *Parser) advanceTokens() {
 }
 
 // Determines if next token is of the expected type.
-// Advances token pointers if true, adds error otherwise
+// Advances token pointers if true, creates parser error otherwise
 func (p *Parser) expectPeek(expToken token.TokenType) bool {
 	if !p.peekTokenIs(expToken) {
-		p.errors = append(p.errors, fmt.Sprintf("expectPeek found unexpected peek, Got=%s Expected=%s", p.nextToken.Type, expToken))
+		p.errors = append(p.errors, fmt.Sprintf("expectPeek found unexpected peek, Got=%s Expected=%s. Line %d, Column %d", p.nextToken.Type, expToken, p.nextToken.Position.Line, p.nextToken.Position.Column))
 		return false
 	}
 

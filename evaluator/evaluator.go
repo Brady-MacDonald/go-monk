@@ -12,9 +12,10 @@ var (
 	FALSE = &object.Boolean{Value: false}
 )
 
-// Evaluate given ast.Node
+// Evaluate given ast.Node based on its type
 func Eval(astNode ast.Node, env *object.Environment) object.Object {
 	switch node := astNode.(type) {
+
 	case *ast.Program:
 		return evalProgram(node.Statements, env)
 
@@ -125,15 +126,6 @@ func evalExpressions(expressions []ast.Expression, env *object.Environment) []ob
 	return results
 }
 
-func evalReturnStatement(ret *ast.ReturnStatement, env *object.Environment) object.Object {
-	val := Eval(ret.Value, env)
-	if isError(val) {
-		return val
-	}
-
-	return &object.Return{Value: val}
-}
-
 // Bind the identifier of LetStatement with the value produces by its expression in the given Environment
 func evalLetStatement(stmt *ast.LetStatement, env *object.Environment) object.Object {
 	expVal := Eval(stmt.Value, env)
@@ -145,16 +137,23 @@ func evalLetStatement(stmt *ast.LetStatement, env *object.Environment) object.Ob
 	return nil
 }
 
-func evalArrayLiteral(arrAst *ast.ArrayLiteral, env *object.Environment) object.Object {
-	arrObj := &object.Array{}
+func evalReturnStatement(ret *ast.ReturnStatement, env *object.Environment) object.Object {
+	val := Eval(ret.Value, env)
+	if isError(val) {
+		return val
+	}
 
+	return &object.Return{Value: val}
+}
+
+// Evaluate the expressions in an ast.ArrayLiteral
+func evalArrayLiteral(arrAst *ast.ArrayLiteral, env *object.Environment) object.Object {
 	evaledExpr := evalExpressions(arrAst.Elements, env)
 	if len(evaledExpr) == 1 && isError(evaledExpr[0]) {
 		return evaledExpr[0]
 	}
 
-	arrObj.Value = evaledExpr
-	return arrObj
+	return &object.Array{Value: evaledExpr}
 }
 
 func evalHashLiteral(hashAst *ast.HashLiteral, env *object.Environment) object.Object {
@@ -188,7 +187,7 @@ func evalHashLiteral(hashAst *ast.HashLiteral, env *object.Environment) object.O
 	return hash
 }
 
-// Get the element specified by the index into array/hash
+// Get the element of the Array or Hash specified by the index
 func evalIndexExpression(idxExp *ast.IndexExpression, env *object.Environment) object.Object {
 	arrObj := Eval(idxExp.Left, env)
 	if isError(arrObj) {
@@ -208,7 +207,7 @@ func evalIndexExpression(idxExp *ast.IndexExpression, env *object.Environment) o
 		return evalHashIndex(obj, idxObj, env)
 
 	default:
-		return newError("Only Array/Hash is index-able, Got=%s", arrObj.Type())
+		return newError("Only Array/Hash is index-able, Got=%s. Line %d Column %d", arrObj.Type(), idxExp.Token.Position.Line, idxExp.Token.Position.Column)
 	}
 }
 
@@ -310,9 +309,8 @@ func evalFnLiteral(fn *ast.FnLiteral, env *object.Environment) object.Object {
 	fnObj := &object.Function{
 		Parameters: fn.Parameters,
 		Body:       fn.Body,
-		// Lexical env the function was declared in
-		// Includes the identifier this fnObj is bound to allowing recursive calls
-		// Along with all other variables in scope, creating a closure
+		// Lexical env the function was declared in, creating a closure
+		// Includes the identifier this fnObj is bound allowing recursive calls
 		Env: env,
 	}
 

@@ -97,7 +97,7 @@ func (i *Identifier) String() string       { return i.Value }
 
 type IndexExpression struct {
 	Token token.Token //[
-	Left  Expression
+	Left  Expression  // Array or Hash
 	Index Expression
 }
 

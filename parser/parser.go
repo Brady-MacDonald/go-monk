@@ -33,9 +33,8 @@ const (
 	INDEX // Highest index
 )
 
-// Pratt Parser
-// Tokens are associated with parser functions
-// Depending on their position within the expression (prefix/infix) a parsing function will be invoked
+// Pratt Parser: Tokens are associated with parser functions
+// Depending on their position within the expression (prefix/infix) correct parsing function will be invoked
 type (
 	PrefixParseFn func() ast.Expression
 	InfixParseFn  func(left ast.Expression) ast.Expression
@@ -126,7 +125,7 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	return blkStmt
 }
 
-// Construct the ast.Node to represent a valid LetStatement.
+// Construct the LetStatement which has the form:
 // let <identifier> = <expression>
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	ls := &ast.LetStatement{
@@ -174,14 +173,13 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 }
 
 // Parse the current token as the start of an ExpressionStatement
-// The Expression could be of any Expression type
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	es := &ast.ExpressionStatement{
 		Token: p.currToken,
 	}
 
-	// LOWEST precedence used since there is nothing to compare yet.
 	// Use the LOWEST precedence to initialize parsing of expression
+	// LOWEST precedence since there is nothing to compare yet.
 	es.Expr = p.parseExpression(LOWEST)
 
 	if p.peekTokenIs(token.SEMICOLON) {

@@ -3,20 +3,22 @@ package lexer
 import "monkey/token"
 
 // Create new token based from provided string
-func newTokenStr(tokType token.TokenType, lit string) token.Token {
+func newTokenStr(tokType token.TokenType, lit string, pos token.Position) token.Token {
 	tok := token.Token{
-		Type:    tokType,
-		Literal: lit,
+		Type:     tokType,
+		Literal:  lit,
+		Position: pos,
 	}
 
 	return tok
 }
 
 // Create new token based from provided byte converted to string
-func newToken(tokType token.TokenType, lit byte) token.Token {
+func newToken(tokType token.TokenType, lit byte, pos token.Position) token.Token {
 	tok := token.Token{
-		Type:    tokType,
-		Literal: string(lit),
+		Type:     tokType,
+		Literal:  string(lit),
+		Position: pos,
 	}
 
 	return tok
